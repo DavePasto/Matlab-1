@@ -95,54 +95,104 @@ for i=1:length(Maxindex2)
     end
 end
 meanRR2 = mean(RR2);
-disp('intervallo RR medio 1')
+disp('intervallo RR medio 1 [sec]')
 disp(meanRR1)
-disp('intervallo RR medio 2')
+disp('intervallo RR medio 2 [sec]')
 disp(meanRR2)
 diffRR = meanRR2 - meanRR1;
-disp('differenza medie intervalli RR')
+disp('differenza medie intervalli RR [sec]')
 disp(diffRR)
 meanRR = (meanRR2 + meanRR1)/2;
 %% QRS Complex
 % funzione per il calcolo della durata del complesso QRS e per la
 % visualizzazione del complesso QRS medio.
-M = meanRR;   % intervallo temporale in sec finestra per QRS (0.08-0.12 sec)
+M1 = meanRR1;   % intervallo temporale in sec finestra 
 Numfin1 = length(values1);  % numero finestre totale
 Numfin2 = length(values2);
-Nm = tmax/M; % numero campioni per ogni finestra 
-matrixQRS1 = rand([Numfin1 Nm]);
+Nm1 = tmax/M1; % numero campioni per ogni finestra 
+matrixQRS1 = rand([Numfin1 Nm1]);
+grayColor = [.7 .7 .7];
 for i=1:Numfin1
-    for j=1:Nm
-            matrixQRS1(i,j) = data1(Maxindex1(i) - Nm/2 + j);
+    for j=1:Nm1
+            matrixQRS1(i,j) = data1(Maxindex1(i) - Nm1/2 + j);
     end
 end
 meanQRS1 = mean(matrixQRS1);
-timeQRS = linspace((-M/2),(M/2),Nm);
+timeQRS1 = linspace((-M1/2),(M1/2),Nm1);
 f7 = figure('Name','QRS Complex 1');
-plot(timeQRS, matrixQRS1, ':');
+plot(timeQRS1, matrixQRS1, ':', 'Color', grayColor);
 hold on
 legend('Singles QRS Complexes 1');
-plot(timeQRS,(meanQRS1)', 'k','DisplayName', 'Mean QRS Complex 1');
+plot(timeQRS1,(meanQRS1)', 'k','DisplayName', 'Mean QRS Complex 1', 'LineWidth', 3);
 hold off  % plotto il complesso medio QRS 
 % Note: la forma è corretta, individuo i vari picchi P, Q, R, S e T;
         % non so bene che intervallo M prendere
         % manca la rappresentazione del complesso QRS medio della seconda
         % ECG
-matrixQRS2 = rand([Numfin2 Nm]);
+M2 = meanRR2;
+Nm2 = tmax/M2;
+matrixQRS2 = rand([Numfin2 Nm2]);
 for i=1:Numfin2
-    for j=1:Nm
-            matrixQRS2(i,j) = data2(Maxindex2(i) - Nm/2 + j);
+    for j=1:Nm2
+            matrixQRS2(i,j) = data2(Maxindex2(i) - Nm2/2 + j);
     end
 end
 meanQRS2 = mean(matrixQRS2);
+timeQRS2 = linspace((-M2/2),(M2/2),Nm2);
 f8 = figure('Name','QRS Complex 2');
-plot(timeQRS,matrixQRS2, ':');
+plot(timeQRS2,matrixQRS2, ':', 'Color', grayColor);
 hold on
 legend('Singles QRS Complexes 2');
-plot(timeQRS,(meanQRS2)', 'k','DisplayName', 'Mean QRS Complex 2');
+plot(timeQRS2,(meanQRS2)', 'k','DisplayName', 'Mean QRS Complex 2', 'LineWidth', 3);
 hold off
 %% QRS Complex Duration
  % trovo intervallo tra R e S e lo stimo pari a metà della durata QRS
  % QRS = RS*2; stima durata QRS
+MaxQRS1 = max(meanQRS1);
+MinQRS1 = min(meanQRS1);
+for i=1:Nm1
+    if(meanQRS1(i) == MaxQRS1)
+        Imax1 = i;
+    end
+end
+for i=1:Nm1
+    if(meanQRS1(i) == MinQRS1)
+        Imin1 = i;
+    end
+end
+durQRS1 = (timeQRS1(Imin1) - timeQRS1(Imax1))*2;
+disp('Mean Duration QRS Complex 1 [sec]')
+disp(durQRS1)
+MaxQRS2 = max(meanQRS2);
+MinQRS2 = min(meanQRS2);
+for i=1:Nm2
+    if(meanQRS2(i) == MaxQRS2)
+        Imax2 = i;
+    end
+end
+for i=1:Nm2
+    if(meanQRS2(i) == MinQRS2)
+        Imin2 = i;
+    end
+end
+durQRS2 = (timeQRS2(Imin2) - timeQRS2(Imax2))*2;
+disp('Mean Duration QRS Complex 2 [sec]')
+disp(durQRS2)
+% single QRS durations
+
  %% Histogram
- % istogramma
+ % istogramma intervallo RR
+n_bins = 100; % decido io il numero di bins
+min_minRR = min([RR1,RR2]);
+max_maxRR = max([RR1,RR2]);
+
+bin_edgesRR = linspace(min_minRR, max_maxRR, n_bins);  % devo prendere il minimo globale tra i due e il massimo globale 
+               % cerco i limiti dei vari bins per avere degli intervalli in
+               % cui inserire i vari campioni X i-esimi
+
+bin_centersRR = bin_edgesRR(1:end-1) + mean(diff((bin_edgesRR))); % voglio un vettore con i centri dei vari bins, in modo che il valore del singolo bin cada centralmente
+f9 = figure('Name','RR interval Histogram');
+histogram(RR1,bin_edgesRR);
+hold on
+histogram(RR2, bin_edgesRR,'FaceColor','r');
+% istogramma QRS duration
